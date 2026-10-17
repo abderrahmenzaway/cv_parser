@@ -1,0 +1,23 @@
+# Web app and database
+flask==2.3.3
+werkzeug==2.3.7
+mysql-connector-python==8.1.0
+
+# PDF, Word and OCR
+pdfplumber==0.9.0
+pdf2image==1.16.3
+pytesseract==0.3.10
+Pillow==10.0.1
+opencv-python==4.8.1.78
+python-docx
+docx2pdf
+
+# NLP and layout model
+torch==2.0.1
+transformers==4.33.3
+langdetect==1.0.9
+numpy==1.24.4
+
+# Monitoring and tests
+psutil==5.9.6
+pytest==7.4.3

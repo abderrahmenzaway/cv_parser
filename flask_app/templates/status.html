@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}System Status - CV Parser{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold text-primary">
+                    <i class="fas fa-heartbeat me-3"></i>System Status
+                </h1>
+                <p class="lead text-muted">Monitor system health and configuration</p>
+            </div>
+
+            <!-- Overall Status -->
+            <div class="row mb-5">
+                <div class="col-md-3">
+                    <div class="card text-center border-success">
+                        <div class="card-body">
+                            <i class="fas fa-check-circle fs-1 text-success mb-2"></i>
+                            <h5>System Online</h5>
+                            <p class="text-muted mb-0">All services running</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-python fs-1 text-primary mb-2"></i>
+                            <h5>Python Active</h5>
+                            <p class="text-muted mb-0">Environment ready</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center {{ 'border-success' if status.extractor_script_exists else 'border-warning' }}">
+                        <div class="card-body">
+                            <i class="fas fa-brain fs-1 {{ 'text-success' if status.extractor_script_exists else 'text-warning' }} mb-2"></i>
+                            <h5>AI Processing</h5>
+                            <p class="text-muted mb-0">{{ 'Ready' if status.extractor_script_exists else 'Check Config' }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center {{ 'border-success' if status.upload_folder_exists else 'border-danger' }}">
+                        <div class="card-body">
+                            <i class="fas fa-folder fs-1 {{ 'text-success' if status.upload_folder_exists else 'text-danger' }} mb-2"></i>
+                            <h5>Storage</h5>
+                            <p class="text-muted mb-0">{{ 'Available' if status.upload_folder_exists else 'Error' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Status Cards -->
+            <div class="row">
+                <!-- Python Environment -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-python me-2"></i>Python Environment
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                        <div>
+                                            <strong>Python Executable</strong>
+                                            <br>
+                                            <code class="text-primary">{{ status.python_executable }}</code>
+                                        </div>
+                                        <i class="fas fa-check-circle text-success fs-4"></i>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                        <div>
+                                            <strong>Working Directory</strong>
+                                            <br>
+                                            <code class="text-secondary">{{ status.working_directory }}</code>
+                                        </div>
+                                        <i class="fas fa-folder text-info fs-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Directory Status -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-folder-tree me-2"></i>Directory Status
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                        <div>
+                                            <strong>Upload Folder</strong>
+                                            <br>
+                                            <code class="text-secondary">{{ status.upload_folder }}</code>
+                                        </div>
+                                        <span class="status-badge {{ 'success' if status.upload_folder_exists else 'error' }}">
+                                            {{ 'Available' if status.upload_folder_exists else 'Missing' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                        <div>
+                                            <strong>Scripts Folder</strong>
+                                            <br>
+                                            <code class="text-secondary">{{ status.scripts_folder }}</code>
+                                        </div>
+                                        <span class="status-badge {{ 'success' if status.scripts_folder_exists else 'error' }}">
+                                            {{ 'Available' if status.scripts_folder_exists else 'Missing' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Script Status -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-file-code me-2"></i>Processing Scripts
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                        <div>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-brain me-2 text-primary"></i>
+                                                <strong>CV Extractor Script</strong>
+                                            </div>
+                                            <small class="text-muted">PDF processing with AI</small>
+                                        </div>
+                                        <span class="status-badge {{ 'success' if status.extractor_script_exists else 'error' }}">
+                                            {{ 'Ready' if status.extractor_script_exists else 'Missing' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                        <div>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-database me-2 text-success"></i>
+                                                <strong>Insert Data Script</strong>
+                                            </div>
+                                            <small class="text-muted">Database insertion</small>
+                                        </div>
+                                        <span class="status-badge {{ 'success' if status.insert_script_exists else 'error' }}">
+                                            {{ 'Ready' if status.insert_script_exists else 'Missing' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Health -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-heartbeat me-2"></i>System Health
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                        <div>
+                                            <strong>Database Connection</strong>
+                                            <br>
+                                            <small class="text-muted" id="dbStatus">Checking...</small>
+                                        </div>
+                                        <div class="spinner-border spinner-border-sm text-primary" id="dbSpinner"></div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                        <div>
+                                            <strong>AI Service</strong>
+                                            <br>
+                                            <small class="text-muted">CV extractor (LayoutLMv3 + OCR)</small>
+                                        </div>
+                                        <span class="status-badge {{ 'success' if status.extractor_script_exists else 'warning' }}">
+                                            {{ 'Configured' if status.extractor_script_exists else 'Check Config' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Actions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tools me-2"></i>System Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-primary w-100" onclick="refreshStatus()">
+                                <i class="fas fa-sync-alt me-2"></i>Refresh Status
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('health_check') }}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-stethoscope me-2"></i>Health Check
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('view_logs') }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-list-alt me-2"></i>View Logs
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('list_files') }}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-folder-open me-2"></i>Browse Files
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Troubleshooting Tips -->
+            {% if not status.extractor_script_exists or not status.insert_script_exists or not status.upload_folder_exists %}
+            <div class="alert alert-warning mt-4">
+                <h6 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Configuration Issues Detected
+                </h6>
+                <ul class="mb-0">
+                    {% if not status.extractor_script_exists %}
+                    <li>CV extractor script is missing. Ensure <code>cv_extractor.py</code> is in the scripts folder.</li>
+                    {% endif %}
+                    {% if not status.insert_script_exists %}
+                    <li>Database insert script is missing. Ensure <code>insert.py</code> is in the scripts folder.</li>
+                    {% endif %}
+                    {% if not status.upload_folder_exists %}
+                    <li>Upload folder is missing. It will be created automatically on first upload.</li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Check database connection status
+async function checkDatabaseStatus() {
+    try {
+        const response = await fetch('/health');
+        const data = await response.json();
+        
+        const dbStatusElement = document.getElementById('dbStatus');
+        const dbSpinnerElement = document.getElementById('dbSpinner');
+        
+        dbSpinnerElement.style.display = 'none';
+        
+        if (data.database === 'OK') {
+            dbStatusElement.innerHTML = '<span class="text-success">Connected</span>';
+            dbStatusElement.parentElement.parentElement.querySelector('.status-badge')?.remove();
+            const badge = document.createElement('span');
+            badge.className = 'status-badge success';
+            badge.textContent = 'Connected';
+            dbStatusElement.parentElement.parentElement.appendChild(badge);
+        } else {
+            dbStatusElement.innerHTML = '<span class="text-danger">Connection Failed</span>';
+            dbStatusElement.parentElement.parentElement.querySelector('.status-badge')?.remove();
+            const badge = document.createElement('span');
+            badge.className = 'status-badge error';
+            badge.textContent = 'Error';
+            dbStatusElement.parentElement.parentElement.appendChild(badge);
+        }
+    } catch (error) {
+        document.getElementById('dbSpinner').style.display = 'none';
+        document.getElementById('dbStatus').innerHTML = '<span class="text-danger">Check Failed</span>';
+    }
+}
+
+function refreshStatus() {
+    window.location.reload();
+}
+
+// Check database status on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(checkDatabaseStatus, 1000);
+});
+</script>
+{% endblock %}

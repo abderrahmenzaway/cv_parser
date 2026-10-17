@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+venv/
+.venv/
+.env
+logs/
+
+# Uploaded CVs and parsed results contain personal data: never commit them
+flask_app/uploads/*
+!flask_app/uploads/.gitkeep
+*.pdf
+*_results.json
+
+# Local model weights (download them instead)
+local_layoutlmv3/

@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Upload CV - CV Parser{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Main Upload Card -->
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>Upload CV Document
+                    </h3>
+                    <p class="mb-0 mt-2 text-white-50">Upload a PDF resume for AI-powered parsing and analysis</p>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm" action="{{ url_for('upload_file') }}">
+                        <!-- Drag and Drop Upload Area -->
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <h4>Drop your file here</h4>
+                            <p class="text-muted mb-3">or click to browse files</p>
+                            <input type="file" class="form-control d-none" id="pdf_file" name="pdf_file" 
+                                   accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
+                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('pdf_file').click()">
+                                <i class="fas fa-folder-open me-2"></i>Choose File
+                            </button>
+                        </div>
+
+                        <!-- Selected File Info -->
+                        <div id="fileInfo" class="mt-4 d-none">
+                            <div class="alert alert-info">
+                                <div class="d-flex align-items-center">
+                                    <div class="file-icon me-3">
+                                        <i class="fas fa-file-pdf" id="fileIcon"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1" id="fileName">Selected File</h6>
+                                        <small class="text-muted" id="fileSize">File size</small>
+                                        <div id="fileDetails" class="d-none mt-2">
+                                            <small class="text-muted d-block" id="fileType">Type: </small>
+                                            <small class="text-muted d-block" id="fileModified">Last Modified: </small>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-info me-2" onclick="toggleFileDetails()" title="View Details">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Button -->
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg" id="uploadBtn">
+                                <i class="fas fa-upload me-2"></i>Upload and Process CV
+                            </button>
+                        </div>
+
+                        <!-- File Requirements -->
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="text-center">
+                                    <i class="fas fa-check-circle text-success fs-4 mb-2"></i>
+                                    <h6>Supported Format</h6>
+                                       <p class="text-muted small">Supported formats: PDF, DOC, DOCX</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-center">
+                                    <i class="fas fa-weight-hanging text-info fs-4 mb-2"></i>
+                                    <h6>Size Limit</h6>
+                                    <p class="text-muted small">Maximum 16MB</p>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Processing Status -->
+                    <div id="processingStatus" class="d-none mt-4">
+                        <div class="text-center">
+                            <div class="spinner mb-3"></div>
+                            <h5>Processing your CV...</h5>
+                            <p class="text-muted">Please wait while we analyze your document</p>
+                            <div class="progress mt-3">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Enhanced file upload functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('pdf_file');
+    const fileInfo = document.getElementById('fileInfo');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadForm = document.getElementById('uploadForm');
+    const processingStatus = document.getElementById('processingStatus');
+
+    // Drag and drop functionality
+    uploadArea.addEventListener('click', () => fileInput.click());
+    
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            const f = files[0];
+            if (isPdfFile(f)) {
+                try {
+                    const dt = new DataTransfer();
+                    dt.items.add(f);
+                    fileInput.files = dt.files;
+                } catch (err) {
+                    try { fileInput.files = files; } catch (e2) { alert('Drag-and-drop not supported. Use "Choose File".'); return; }
+                }
+                displayFileInfo(f);
+            } else {
+                alert('Please drop a PDF, DOC, or DOCX file');
+            }
+        }
+    });
+
+    // File input change handler
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            const f = this.files[0];
+            if (!isPdfFile(f)) {
+                alert('Invalid file type. Please choose a PDF, DOC, or DOCX file.');
+                clearFile();
+                return;
+            }
+            displayFileInfo(f);
+        } else {
+            clearFile();
+        }
+    });
+
+    function isPdfFile(file) {
+        const name = file.name ? file.name.toLowerCase() : '';
+        const nameOk = name.endsWith('.pdf') || name.endsWith('.doc') || name.endsWith('.docx');
+        const typeOk = file.type === 'application/pdf' || 
+                      file.type === 'application/msword' || 
+                      file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        return nameOk || typeOk;
+    }
+
+    // Display selected file information
+    function displayFileInfo(file) {
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        
+        // Update file icon based on type
+        const fileIcon = document.getElementById('fileIcon');
+        if (file.name.toLowerCase().endsWith('.pdf')) {
+            fileIcon.className = 'fas fa-file-pdf';
+        } else if (file.name.toLowerCase().endsWith('.doc') || file.name.toLowerCase().endsWith('.docx')) {
+            fileIcon.className = 'fas fa-file-word text-primary';
+        }
+        
+        // Set detailed file information
+        document.getElementById('fileType').textContent = 'Type: ' + file.type || 'Unknown';
+        document.getElementById('fileModified').textContent = 'Last Modified: ' + new Date(file.lastModified).toLocaleDateString();
+        
+        fileInfo.classList.remove('d-none');
+    }
+
+    // Toggle file details visibility
+    window.toggleFileDetails = function() {
+        const details = document.getElementById('fileDetails');
+        details.classList.toggle('d-none');
+    }
+
+    // Clear selected file
+    window.clearFile = function() {
+        fileInput.value = '';
+        fileInfo.classList.add('d-none');
+    }
+
+    // Format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Form submission handler
+    uploadForm.addEventListener('submit', function(e) {
+        if (fileInput.files.length === 0) {
+            e.preventDefault();
+            alert('Please choose a file first.');
+            return;
+        }
+        uploadBtn.style.display = 'none';
+        processingStatus.classList.remove('d-none');
+    });
+});
+</script>
+{% endblock %}

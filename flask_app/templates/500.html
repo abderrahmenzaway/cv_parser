@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}500 Internal Server Error{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-danger">
+        <h1 class="display-4">500</h1>
+        <p class="lead">An internal server error occurred. Please try again later.</p>
+        <a href="/upload" class="btn btn-primary">Go to Upload Page</a>
+    </div>
+</div>
+{% endblock %}

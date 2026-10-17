@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block title %}All Candidates - CV Parser{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h1 class="display-6 fw-bold text-primary">
+                        <i class="fas fa-users me-3"></i>Candidate Database
+                    </h1>
+                    <p class="lead text-muted">Manage and browse all parsed candidate profiles</p>
+                </div>
+                <div class="text-end">
+                    <span class="status-badge info fs-6">{{ candidates|length }} candidates</span>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-5">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-user-friends fs-1 text-primary mb-2"></i>
+                            <h3 class="fw-bold">{{ candidates|length }}</h3>
+                            <p class="text-muted mb-0">Total Candidates</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-file-pdf fs-1 text-success mb-2"></i>
+                            <h3 class="fw-bold">{{ candidates|length }}</h3>
+                            <p class="text-muted mb-0">CVs Processed</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-tags fs-1 text-warning mb-2"></i>
+                            <h3 class="fw-bold">{{ candidates|sum(attribute='skill_count') }}</h3>
+                            <p class="text-muted mb-0">Skills Extracted</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-search fs-1 text-info mb-2"></i>
+                            <h3 class="fw-bold">100%</h3>
+                            <p class="text-muted mb-0">Searchable</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Candidates List -->
+            <div class="card fade-in">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>Candidate Directory
+                    </h3>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="toggleView('grid')">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm active" onclick="toggleView('list')">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if candidates %}
+                    
+                    <!-- Grid View -->
+                    <div id="gridView" class="d-none">
+                        <div class="row">
+                            {% for candidate in candidates %}
+                            <div class="col-lg-4 col-md-6 mb-4">
+                                <div class="card h-100 border-0 shadow-sm candidate-card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start mb-3">
+                                            <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                 style="width: 50px; height: 50px; font-size: 1.25rem;">
+                                                {{ candidate.first_name[0] if candidate.first_name else 'U' }}{{ candidate.last_name[0] if candidate.last_name else '' }}
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h5 class="card-title mb-1">
+                                                    {{ candidate.first_name }} {{ candidate.last_name }}
+                                                </h5>
+                                                <small class="text-muted">ID: #{{ candidate.candidate_id }}</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {% if candidate.email %}
+                                            <div class="mb-2">
+                                                <i class="fas fa-envelope text-muted me-2"></i>
+                                                <a href="mailto:{{ candidate.email }}" class="text-decoration-none">
+                                                    {{ candidate.email }}
+                                                </a>
+                                            </div>
+                                            {% endif %}
+                                            {% if candidate.phone %}
+                                            <div class="mb-2">
+                                                <i class="fas fa-phone text-muted me-2"></i>
+                                                <span>{{ candidate.phone }}</span>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="status-badge success">
+                                                {{ candidate.skill_count }} skills
+                                            </span>
+                                            <div class="btn-group">
+                                                {% if candidate.cv_file_path %}
+                                                <button class="btn btn-sm btn-outline-primary" title="View CV" onclick="viewCV('{{ candidate.cv_file_path }}')">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </button>
+                                                {% endif %}
+                                                <button class="btn btn-sm btn-primary" title="View Details" onclick="viewCandidateDetails('{{ candidate.candidate_id }}')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- List View -->
+                    <div id="listView">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th width="60">
+                                            <i class="fas fa-hashtag"></i>
+                                        </th>
+                                        <th>Candidate</th>
+                                        <th>Contact Information</th>
+                                        <th width="120">Skills</th>
+                                        <th width="100">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for candidate in candidates %}
+                                    <tr class="candidate-row" id="candidate-{{ candidate.candidate_id }}">
+                                        <td>
+                                            <span class="fw-bold text-muted">#{{ candidate.candidate_id }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 40px; height: 40px;">
+                                                    {{ candidate.first_name[0] if candidate.first_name else 'U' }}{{ candidate.last_name[0] if candidate.last_name else '' }}
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">{{ candidate.first_name }} {{ candidate.last_name }}</h6>
+                                                    <small class="text-muted">Candidate Profile</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if candidate.email %}
+                                            <div class="mb-1">
+                                                <i class="fas fa-envelope text-muted me-2"></i>
+                                                <a href="mailto:{{ candidate.email }}" class="text-decoration-none">
+                                                    {{ candidate.email }}
+                                                </a>
+                                            </div>
+                                            {% endif %}
+                                            {% if candidate.phone %}
+                                            <div>
+                                                <i class="fas fa-phone text-muted me-2"></i>
+                                                {{ candidate.phone }}
+                                            </div>
+                                            {% else %}
+                                            <span class="text-muted">No contact info</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="status-badge {{ 'success' if candidate.skill_count > 5 else 'warning' if candidate.skill_count > 0 else 'error' }}">
+                                                {{ candidate.skill_count }} skills
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                {% if candidate.cv_file_path %}
+                                                <button class="btn btn-outline-primary" title="View CV" onclick="viewCV('{{ candidate.cv_file_path }}')">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </button>
+                                                {% endif %}
+                                                <button class="btn btn-primary" title="View Details" onclick="viewCandidateDetails('{{ candidate.candidate_id }}')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fs-1 text-muted mb-3"></i>
+                        <h4>No candidates found</h4>
+                        <p class="text-muted mb-4">Start by uploading some CV documents to build your candidate database.</p>
+                        <a href="{{ url_for('upload_file') }}" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i>Upload First CV
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            {% if candidates %}
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-rocket me-2"></i>Quick Actions
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('upload_file') }}" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-plus me-2"></i>Add New Candidate
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('search_cv') }}" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fas fa-search me-2"></i>Search Candidates
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-info w-100 mb-2" onclick="exportData()">
+                                <i class="fas fa-download me-2"></i>Export Data
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('system_status') }}" class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="fas fa-cog me-2"></i>System Status
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleView(viewType) {
+    const gridView = document.getElementById('gridView');
+    const listView = document.getElementById('listView');
+    const buttons = document.querySelectorAll('.btn-outline-secondary');
+    
+    buttons.forEach(btn => btn.classList.remove('active'));
+    
+    if (viewType === 'grid') {
+        gridView.classList.remove('d-none');
+        listView.classList.add('d-none');
+        buttons[0].classList.add('active');
+    } else {
+        gridView.classList.add('d-none');
+        listView.classList.remove('d-none');
+        buttons[1].classList.add('active');
+    }
+}
+
+function exportData() {
+    // Placeholder for export functionality
+    alert('Export functionality coming soon!');
+}
+
+// Function to view CV file
+function viewCV(filePath) {
+    if (filePath) {
+        // Open CV in new tab/window
+        window.open('/view_cv/' + encodeURIComponent(filePath), '_blank');
+    } else {
+        alert('CV file not available');
+    }
+}
+
+// Function to view candidate details
+function viewCandidateDetails(candidateId) {
+    if (candidateId) {
+        // Redirect to candidate detail page or show modal
+        window.location.href = '/candidate/' + candidateId;
+    } else {
+        alert('Candidate details not available');
+    }
+}
+
+// Highlight candidate if coming from search
+document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash;
+    if (hash.startsWith('#candidate-')) {
+        const candidateRow = document.querySelector(hash);
+        if (candidateRow) {
+            candidateRow.scrollIntoView({ behavior: 'smooth' });
+            candidateRow.style.backgroundColor = 'var(--primary-light)';
+            setTimeout(() => {
+                candidateRow.style.backgroundColor = '';
+            }, 3000);
+        }
+    }
+});
+</script>
+{% endblock %}
